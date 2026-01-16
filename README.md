@@ -69,8 +69,8 @@ bun run src/index.ts
 
 For commits to show up on your GitHub contribution graph, **all** of these must be true:
 
-1. **Email must match** - Your local git email (`git config user.email`) must be [linked to your GitHub account](https://github.com/settings/emails). This is the most common reason contributions don't appear.
-2. **Repo must be public** - Or you must be a collaborator on a private repo (not just the owner).
+1. **Email must match** - Your local git email (`git config user.email`) must be [linked to your GitHub account](https://github.com/settings/emails).
+2. **Enable private contributions on your git contribution graph.**
 3. **Commits must be on the default branch** - Usually `main` or `master`.
 4. **Repo cannot be a fork** - Commits in forks don't count unless merged upstream.
 
