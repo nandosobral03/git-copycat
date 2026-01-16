@@ -62,7 +62,7 @@ Edit `.env` with your configuration:
 ## Usage
 
 ```bash
-bun run src/index.ts
+bun run start
 ```
 
 ## Important: Making Contributions Appear
@@ -70,7 +70,7 @@ bun run src/index.ts
 For commits to show up on your GitHub contribution graph, **all** of these must be true:
 
 1. **Email must match** - Your local git email (`git config user.email`) must be [linked to your GitHub account](https://github.com/settings/emails).
-2. **Enable private contributions on your git contribution graph.**
+2. **Enable private contributions on your git contribution graph.** (If the TARGET_REPO_PATH is private, also remember to turn this on on your target account if commits are on private repos)
 3. **Commits must be on the default branch** - Usually `main` or `master`.
 4. **Repo cannot be a fork** - Commits in forks don't count unless merged upstream.
 
