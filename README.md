@@ -13,7 +13,7 @@ Useful when you want your primary GitHub profile to reflect contributions made o
 2. Analyzes existing commits in your target repository
 3. Creates empty backdated commits to match the source contribution count
 
-The tool is **idempotent** you can run it multiple times safely. It only creates the commits needed to match the source, skipping dates that already have enough commits.
+The tool is **idempotent**: you can run it multiple times safely. It only creates the commits needed to match the source, skipping dates that already have enough commits.
 
 Commits look like this:
 ```
@@ -27,7 +27,7 @@ Contribution sync: 2024-01-15 (3/3)
 
 **Prerequisites:**
 - [Bun](https://bun.sh) runtime installed
-- GitHub personal access token with `read:user` scope (for accessing contribution data via GraphQL API)
+- GitHub personal access token with `read:user` scope (and `repo` scope if using `AUTO_PUSH` or `TARGET_REPO_URL`)
 
 ```bash
 git clone https://github.com/nandosobral03/git-copycat
@@ -77,8 +77,9 @@ You can run git-copycat automatically on a schedule using GitHub Actions.
 
 ### Setup
 
-1. Fork or clone this repository
-2. Add the following secrets to your repository (Settings > Secrets and variables > Actions):
+1. **Create a target repository** on GitHub where the mirrored commits will live. It must have at least one commit (can be just a README).
+2. Fork or clone this repository
+3. Add the following secrets to your repository (Settings > Secrets and variables > Actions):
 
 | Secret | Description |
 |--------|-------------|
@@ -88,7 +89,7 @@ You can run git-copycat automatically on a schedule using GitHub Actions.
 | `GIT_USER_NAME` | Your git commit author name |
 | `GIT_USER_EMAIL` | Your git commit author email (must be linked to your GitHub account) |
 
-3. The workflow runs daily at 6:00 AM UTC. You can also trigger it manually from the Actions tab.
+4. The workflow runs daily at 6:00 AM UTC. You can also trigger it manually from the Actions tab.
 
 ### Customization
 
@@ -98,8 +99,8 @@ Edit `.github/workflows/sync.yml` to change the schedule or other settings.
 
 For commits to show up on your GitHub contribution graph, **all** of these must be true:
 
-1. **Email must match** - Your local git email (`git config user.email`) must be [linked to your GitHub account](https://github.com/settings/emails).
-2. **Enable private contributions on your git contribution graph.** (If the TARGET_REPO_PATH is private, also remember to turn this on on your target account if commits are on private repos)
+1. **Email must match** - Your git email (`git config user.email` or `GIT_USER_EMAIL` in CI) must be [linked to your GitHub account](https://github.com/settings/emails).
+2. **Enable private contributions on your git contribution graph.** (If your target repo is private, remember to enable "Private contributions" in your GitHub profile settings)
 3. **Commits must be on the default branch** - Usually `main` or `master`.
 4. **Repo cannot be a fork** - Commits in forks don't count unless merged upstream.
 
@@ -124,4 +125,4 @@ Or just delete the target repository entirely if it was created only for this pu
 
 ## Disclaimer
 
-GitHub contribution graphs have always been trivial to fake this tool doesn't change that. The graph works on an honor system; it's a rough signal, not a verified credential. This tool is intended for consolidating your own legitimate work across accounts, not for misrepresenting your activity. Use your own judgment.
+GitHub contribution graphs have always been trivial to fake. This tool doesn't change that. The graph works on an honor system; it's a rough signal, not a verified credential. This tool is intended for consolidating your own legitimate work across accounts, not for misrepresenting your activity. Use your own judgment.
