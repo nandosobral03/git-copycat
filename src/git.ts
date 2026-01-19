@@ -1,8 +1,27 @@
 import { $ } from "bun";
+import { mkdtemp } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
 
 export interface CommitCount {
   date: string;
   count: number;
+}
+
+export async function cloneRepo(repoUrl: string, token: string): Promise<string> {
+  const tempDir = await mkdtemp(join(tmpdir(), "git-copycat-"));
+
+  // Insert token into URL for authentication
+  const authedUrl = repoUrl.replace("https://", `https://x-access-token:${token}@`);
+
+  await $`git clone ${authedUrl} ${tempDir}`.quiet();
+
+  return tempDir;
+}
+
+export async function configureGit(repoPath: string, name: string, email: string): Promise<void> {
+  await $`git -C ${repoPath} config user.name ${name}`.quiet();
+  await $`git -C ${repoPath} config user.email ${email}`.quiet();
 }
 
 export async function getExistingCommitCounts(repoPath: string): Promise<Map<string, number>> {

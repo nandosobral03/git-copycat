@@ -37,7 +37,7 @@ export function printBanner(): void {
   );
 }
 
-export function printConfig(config: { sourceUsername: string; targetRepoPath: string; fromDate: Date; toDate: Date; dryRun: boolean }): void {
+export function printConfig(config: { sourceUsername: string; targetRepoPath: string; targetRepoUrl?: string; fromDate: Date; toDate: Date; dryRun: boolean; ci?: boolean }): void {
   const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
   console.log(colors.muted("  Configuration:"));
@@ -46,6 +46,9 @@ export function printConfig(config: { sourceUsername: string; targetRepoPath: st
   console.log(`    ${symbols.bullet} Period:  ${colors.accent(formatDate(config.fromDate))} ${symbols.arrow} ${colors.accent(formatDate(config.toDate))}`);
   if (config.dryRun) {
     console.log(`    ${symbols.bullet} Mode:    ${colors.warning("DRY RUN")}`);
+  }
+  if (config.ci) {
+    console.log(`    ${symbols.bullet} Mode:    ${colors.accent("CI (non-interactive)")}`);
   }
   console.log();
 }

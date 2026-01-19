@@ -1,0 +1,32 @@
+name: Sync Contributions
+
+on:
+  schedule:
+    # Run daily at 6:00 AM UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Checkout git-copycat
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run contribution sync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          SOURCE_USERNAME: ${{ secrets.SOURCE_USERNAME }}
+          TARGET_REPO_URL: ${{ secrets.TARGET_REPO_URL }}
+          GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
+          GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+          AUTO_PUSH: "true"
+          CI: "true"
+        run: bun run start

@@ -1,21 +1,26 @@
 import { fetchContributions } from "./github";
-import { getExistingCommitCounts, createBackdatedCommit, ensureRepo, pushToRemote } from "./git";
+import { getExistingCommitCounts, createBackdatedCommit, ensureRepo, pushToRemote, cloneRepo, configureGit } from "./git";
 import { printBanner, printConfig, printPlanHeader, printPlanItem, printSyncedMessage, printSuccess, printError, printInfo, printWarning, createSpinner, createProgressBar, printDivider, confirmProceed } from "./ui";
 
 interface Config {
   githubToken: string;
   sourceUsername: string;
-  targetRepoPath: string;
+  targetRepoPath?: string;
+  targetRepoUrl?: string;
   fromDate: Date;
   toDate: Date;
   dryRun: boolean;
   autoPush: boolean;
+  ci: boolean;
+  gitUserName?: string;
+  gitUserEmail?: string;
 }
 
 function getConfig(): Config {
   const githubToken = process.env.GITHUB_TOKEN;
   const sourceUsername = process.env.SOURCE_USERNAME;
   const targetRepoPath = process.env.TARGET_REPO_PATH;
+  const targetRepoUrl = process.env.TARGET_REPO_URL;
 
   if (!githubToken) {
     throw new Error("GITHUB_TOKEN environment variable is required");
@@ -23,8 +28,8 @@ function getConfig(): Config {
   if (!sourceUsername) {
     throw new Error("SOURCE_USERNAME environment variable is required");
   }
-  if (!targetRepoPath) {
-    throw new Error("TARGET_REPO_PATH environment variable is required");
+  if (!targetRepoPath && !targetRepoUrl) {
+    throw new Error("Either TARGET_REPO_PATH or TARGET_REPO_URL environment variable is required");
   }
 
   const toDate = new Date();
@@ -40,15 +45,22 @@ function getConfig(): Config {
 
   const dryRun = process.env.DRY_RUN === "true";
   const autoPush = process.env.AUTO_PUSH === "true";
+  const ci = process.env.CI === "true";
+  const gitUserName = process.env.GIT_USER_NAME;
+  const gitUserEmail = process.env.GIT_USER_EMAIL;
 
   return {
     githubToken,
     sourceUsername,
     targetRepoPath,
+    targetRepoUrl,
     fromDate,
     toDate,
     dryRun,
     autoPush,
+    ci,
+    gitUserName,
+    gitUserEmail,
   };
 }
 
@@ -80,13 +92,31 @@ async function main() {
   printBanner();
 
   const config = getConfig();
-  printConfig(config);
+
+  // Resolve target repo path - either use provided path or clone from URL
+  let targetRepoPath: string;
+
+  if (config.targetRepoUrl) {
+    const cloneSpinner = createSpinner(`Cloning ${config.targetRepoUrl}...`);
+    cloneSpinner.start();
+    targetRepoPath = await cloneRepo(config.targetRepoUrl, config.githubToken);
+    cloneSpinner.succeed("Repository cloned");
+  } else {
+    targetRepoPath = config.targetRepoPath!;
+  }
+
+  printConfig({ ...config, targetRepoPath });
   printDivider();
 
   const repoSpinner = createSpinner("Checking target repository...");
   repoSpinner.start();
-  await ensureRepo(config.targetRepoPath);
+  await ensureRepo(targetRepoPath);
   repoSpinner.succeed("Target repository ready");
+
+  // Configure git user if provided (required for CI)
+  if (config.gitUserName && config.gitUserEmail) {
+    await configureGit(targetRepoPath, config.gitUserName, config.gitUserEmail);
+  }
 
   const fetchSpinner = createSpinner(`Fetching contributions for ${config.sourceUsername}...`);
   fetchSpinner.start();
@@ -102,7 +132,7 @@ async function main() {
   const analyzeSpinner = createSpinner("Analyzing existing commits...");
   analyzeSpinner.start();
 
-  const existingCommits = await getExistingCommitCounts(config.targetRepoPath);
+  const existingCommits = await getExistingCommitCounts(targetRepoPath);
   analyzeSpinner.succeed(`Found commits on ${existingCommits.size} days`);
 
   const plan = calculateCommitPlan(sourceMap, existingCommits);
@@ -130,12 +160,18 @@ async function main() {
     return;
   }
 
-  const confirmed = await confirmProceed(`About to create ${totalCommits} commits.`);
-  if (!confirmed) {
+  // Skip confirmation in CI mode
+  if (!config.ci) {
+    const confirmed = await confirmProceed(`About to create ${totalCommits} commits.`);
+    if (!confirmed) {
+      console.log();
+      printInfo("Cancelled by user");
+      console.log();
+      return;
+    }
+  } else {
+    printInfo("CI mode - skipping confirmation");
     console.log();
-    printInfo("Cancelled by user");
-    console.log();
-    return;
   }
 
   console.log();
@@ -146,7 +182,7 @@ async function main() {
   for (const item of plan) {
     for (let i = 0; i < item.toCreate; i++) {
       const message = `Contribution sync: ${item.date} (${i + 1}/${item.toCreate})`;
-      await createBackdatedCommit(config.targetRepoPath, item.date, message);
+      await createBackdatedCommit(targetRepoPath, item.date, message);
       created++;
       progressBar.update(created, { date: item.date });
     }
@@ -160,7 +196,7 @@ async function main() {
     console.log();
     const pushSpinner = createSpinner("Pushing to remote...");
     pushSpinner.start();
-    await pushToRemote(config.targetRepoPath);
+    await pushToRemote(targetRepoPath);
     pushSpinner.succeed("Pushed to remote");
   } else {
     console.log();

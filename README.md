@@ -51,19 +51,48 @@ Edit `.env` with your configuration:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GITHUB_TOKEN` | Yes | Any GitHub personal access token (needs `read:user` scope) |
+| `GITHUB_TOKEN` | Yes | GitHub personal access token (needs `read:user` scope, and `repo` scope if using `TARGET_REPO_URL`) |
 | `SOURCE_USERNAME` | Yes | GitHub username to copy contributions from (must have public contributions visible) |
-| `TARGET_REPO_PATH` | Yes | Path to local target repository |
+| `TARGET_REPO_PATH` | * | Path to local target repository |
+| `TARGET_REPO_URL` | * | HTTPS URL to clone target repo from (alternative to `TARGET_REPO_PATH`) |
+| `GIT_USER_NAME` | No | Git user name for commits (required when using `TARGET_REPO_URL`) |
+| `GIT_USER_EMAIL` | No | Git user email for commits (required when using `TARGET_REPO_URL`) |
 | `FROM_DATE` | No | Start date (ISO format, default: 1 year ago) |
 | `TO_DATE` | No | End date (ISO format, default: today) |
 | `DRY_RUN` | No | Set to `true` to preview without creating commits |
 | `AUTO_PUSH` | No | Set to `true` to automatically push commits |
+| `CI` | No | Set to `true` to skip interactive confirmation (for CI/CD) |
+
+\* Either `TARGET_REPO_PATH` or `TARGET_REPO_URL` is required.
 
 ## Usage
 
 ```bash
 bun run start
 ```
+
+## Running as a GitHub Action
+
+You can run git-copycat automatically on a schedule using GitHub Actions.
+
+### Setup
+
+1. Fork or clone this repository
+2. Add the following secrets to your repository (Settings > Secrets and variables > Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `GH_PAT` | GitHub personal access token with `read:user` and `repo` scopes |
+| `SOURCE_USERNAME` | GitHub username to copy contributions from |
+| `TARGET_REPO_URL` | HTTPS URL of your target repository (e.g., `https://github.com/user/repo.git`) |
+| `GIT_USER_NAME` | Your git commit author name |
+| `GIT_USER_EMAIL` | Your git commit author email (must be linked to your GitHub account) |
+
+3. The workflow runs daily at 6:00 AM UTC. You can also trigger it manually from the Actions tab.
+
+### Customization
+
+Edit `.github/workflows/sync.yml` to change the schedule or other settings.
 
 ## Important: Making Contributions Appear
 
