@@ -70,6 +70,12 @@ export async function ensureRepo(repoPath: string): Promise<void> {
   }
 }
 
-export async function pushToRemote(repoPath: string, remote: string = "origin", branch: string = "main"): Promise<void> {
-  await $`git -C ${repoPath} push ${remote} ${branch}`;
+export async function getCurrentBranch(repoPath: string): Promise<string> {
+  const result = await $`git -C ${repoPath} rev-parse --abbrev-ref HEAD`.text();
+  return result.trim();
+}
+
+export async function pushToRemote(repoPath: string, remote: string = "origin", branch?: string): Promise<void> {
+  const targetBranch = branch || await getCurrentBranch(repoPath);
+  await $`git -C ${repoPath} push ${remote} ${targetBranch}`;
 }
