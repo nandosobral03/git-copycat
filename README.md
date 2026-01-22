@@ -87,7 +87,7 @@ You can run git-copycat automatically on a schedule using GitHub Actions.
 | `SOURCE_USERNAME` | GitHub username to copy contributions from |
 | `TARGET_REPO_URL` | HTTPS URL of your target repository (e.g., `https://github.com/user/repo.git`) |
 | `GIT_USER_NAME` | Your git commit author name |
-| `GIT_USER_EMAIL` | Your git commit author email (must be linked to your GitHub account) |
+| `GIT_USER_EMAIL` | Your git commit author email (see note below) |
 
 4. The workflow runs daily at 6:00 AM UTC. You can also trigger it manually from the Actions tab.
 
@@ -99,7 +99,7 @@ Edit `.github/workflows/sync.yml` to change the schedule or other settings.
 
 For commits to show up on your GitHub contribution graph, **all** of these must be true:
 
-1. **Email must match** - Your git email (`git config user.email` or `GIT_USER_EMAIL` in CI) must be [linked to your GitHub account](https://github.com/settings/emails).
+1. **Email must match** - Your git email (`git config user.email` or `GIT_USER_EMAIL` in CI) must be linked to your GitHub account. **Important:** If your email is set to "Private" in [GitHub email settings](https://github.com/settings/emails), commits using that email won't be linked to your profile. Use your GitHub noreply email instead: `<your-user-id>+<username>@users.noreply.github.com` (you can find this in your GitHub email settings).
 2. **Enable private contributions on your git contribution graph.** (If your target repo is private, remember to enable "Private contributions" in your GitHub profile settings)
 3. **Commits must be on the default branch** - Usually `main` or `master`.
 4. **Repo cannot be a fork** - Commits in forks don't count unless merged upstream.
